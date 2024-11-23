@@ -10,5 +10,8 @@ Let me give some colors as VCL.Navigator.
 ![Capture_3](https://github.com/user-attachments/assets/8ecfc5dc-8870-444b-b373-6fb6ca4827ef)
 
 As extra, you shall be able to :
-- Change background color.
-- Add Hints.
+- Change background color. (OverrideBackGround property, a TBrush) 
+- Add Hints. (used only if component.ShowHints = True)
+- Return to default color (NavigatorGlyphColors.UseColors property)
+- If you are a Dark/Light force side fan an NavigatorGlyphColors.ThemeSensitive property is included
+  to brigthen colors without changing the defined colors.  
