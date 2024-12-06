@@ -9,7 +9,7 @@ uses
   System.UITypes, System.Math, System.UIConsts, System.StrUtils,
   FMX.Types, FMX.Controls, FMX.Layouts, FMX.Objects, FMX.StdCtrls, FMX.Graphics,
   Data.Bind.Controls, Data.Bind.Components, Data.Bind.Consts,
-  FMX.Bind.Navigator;
+  FMX.Bind.Navigator, DesignIntf;
 
 /// range TNavigateButton in three groups
 const   NavigatorScrollings = [nbFirst, nbPrior, nbNext, nbLast,nbRefresh];
@@ -17,11 +17,11 @@ const   NavigatorScrollings = [nbFirst, nbPrior, nbNext, nbLast,nbRefresh];
                                 nbApplyUpdates];
         NavigatorCancelations = [nbDelete,nbCancel,nbCancelUpdates];
 
+// property names ???
+//        HintsArray : Array [TNavigateButton] of String = ('First', 'Prior', 'Next', 'Last', 'Insert', 'Delete', 'Edit', 'Post', 'Cancel', 'Refresh', 'ApplyUpdates', 'CancelUpdates');
 
-  var BtnHintId: array[TNavigateButton] of string = (SFirstRecord, SPriorRecord,
-    SNextRecord, SLastRecord, SInsertRecord, SDeleteRecord, SEditRecord,
-    SPostEdit, SCancelEdit, SRefreshRecord,
-    SApplyUpdates, SCancelUpdates);
+
+
 
 type
 
@@ -30,7 +30,7 @@ type
   TBtnsHints = class (TPersistent)
   private
     FOwner : TColoredBindNavigator;
-    FBtnHints : Array [0..11] of String;
+    FButtonHints : Array [0..11] of String;
     function GetHint(const index : Integer) : String;
     function HintisStored(const index: Integer) : Boolean;
     procedure SetHint(const index : Integer; const Value : String) ;
@@ -38,18 +38,18 @@ type
     constructor Create(aOwner : TColoredBindNavigator);
     destructor Destroy; override;
   published
-    property First : String index 0 read GetHint write SetHint stored HintisStored;
-    property Prior : String index 1 read GetHint write SetHint stored HintisStored;
-    property Next : String index 2 read GetHint write SetHint stored HintisStored;
-    property Last : String index 3 read GetHint write SetHint stored HintisStored;
-    property Insert : String index 4 read GetHint write SetHint stored HintisStored;
-    property Delete : String index 5 read GetHint write SetHint stored HintisStored;
-    property Edit : String index 6 read GetHint write SetHint stored HintisStored;
-    property Post : String index 7 read GetHint write SetHint stored HintisStored;
-    property Cancel : String index 8 read GetHint write SetHint stored HintisStored;
-    property Refresh : String index 9 read GetHint write SetHint stored HintisStored;
-    property ApplyUpdate : String index 10 read GetHint write SetHint stored HintisStored;
-    property CancelUpdate : String index 11 read GetHint write SetHint stored HintisStored;
+    property _01First : String index 0 read GetHint write SetHint stored HintisStored;
+    property _02Prior : String index 1 read GetHint write SetHint stored HintisStored;
+    property _03Next : String index 2 read GetHint write SetHint stored HintisStored;
+    property _04Last : String index 3 read GetHint write SetHint stored HintisStored;
+    property _05Insert : String index 4 read GetHint write SetHint stored HintisStored;
+    property _06Delete : String index 5 read GetHint write SetHint stored HintisStored;
+    property _07Edit : String index 6 read GetHint write SetHint stored HintisStored;
+    property _08Post : String index 7 read GetHint write SetHint stored HintisStored;
+    property _09Cancel : String index 8 read GetHint write SetHint stored HintisStored;
+    property _10Refresh : String index 9 read GetHint write SetHint stored HintisStored;
+    property _11ApplyUpdate : String index 10 read GetHint write SetHint stored HintisStored;
+    property _12CancelUpdate : String index 11 read GetHint write SetHint stored HintisStored;
   end;
 
   TGlyphColors = class(TPersistent)
@@ -87,11 +87,11 @@ type
   TColoredBindNavigator = class(TCustomBindNavigator)
   private
     FNavigatorGlyphColors: TGlyphColors;
-    FHints : TBtnsHints;
+    FBtnHints : TBtnsHints;
     FOverrideBackground : TBrush;
     procedure SetGlyphColors(const Value: TGlyphColors);
-    procedure SetHints(const Value: TBtnsHints);
     procedure SetBrushBackground(const Value: TBrush);
+    procedure SetBtnHints(const Value: TBtnsHints);
   protected
     procedure Loaded; override;
     procedure Paint ; override;
@@ -101,11 +101,11 @@ type
     destructor Destroy; override;
     procedure customcolors(scrollcolor, Updatecolor, cancelcolor : TAlphaColor);
     procedure ApplyColors;
-    procedure SetButtonHints;
+    procedure SetButtonHints(const Show : Boolean = false);
     function GetDefaultGlyphColor : TAlphaColor;
   published
     property NavigatorGlyphColors: TGlyphColors read FNavigatorGlyphColors write SetGlyphColors stored true;
-    property Hints : TBtnsHints read FHints write SetHints stored true;
+    property Hints : TBtnsHints read FBtnHints write SetBtnHints stored true;
     property OverrideBackGround : TBrush read FOverrideBackGround write SetBrushBackground default nil;
     property DataSource;
     property VisibleButtons;
@@ -118,6 +118,7 @@ type
     property ConfirmDelete;
     property Visible;
     property BeforeAction;
+    property ShowHint;
     property OnClick;
   end;
 
@@ -127,6 +128,7 @@ implementation
 
 procedure Register;
 begin
+//  RegisterPropertiesInCategory('Hints',TBtnsHints,HintsArray);
   RegisterComponents('Govel', [TColoredBindNavigator]);
 end;
 
@@ -145,8 +147,8 @@ begin
     inherited;
     if not assigned(FNavigatorGlyphColors)
                 then FNavigatorGlyphColors:=TGlyphColors.Create(Self);
-    if not assigned(FHints)
-                then FHints:=TBtnsHints.Create(Self);
+    if not assigned(FBtnHints)
+                then FBtnHints:=TBtnsHints.Create(Self);
     if not assigned(FOverrideBackground) then
                  FOverrideBackground:=TBrush.Create(TBrushKind.None,TAlphaColors.Null);
     ApplyColors;
@@ -155,7 +157,7 @@ end;
 destructor TColoredBindNavigator.Destroy;
 begin
   FreeAndNil(FNavigatorGlyphColors);
-  FreeAndNil(FHints);
+  FreeAndNil(FBtnHints);
   FreeAndNil(FOverrideBackground);
   inherited;
 end;
@@ -176,6 +178,7 @@ procedure TColoredBindNavigator.Loaded;
 begin
   inherited Loaded;
   ApplyColors;
+  SetButtonHints(Self.ShowHint);
 end;
 
 procedure TColoredBindNavigator.Paint;
@@ -189,15 +192,20 @@ begin
   FOverrideBackGround.Assign(Value);
 end;
 
-procedure TColoredBindNavigator.SetButtonHints;
+procedure TColoredBindNavigator.SetBtnHints(const Value: TBtnsHints);
+begin
+  FBtnHints.Assign(Value);
+end;
+
+procedure TColoredBindNavigator.SetButtonHints(const Show : Boolean = false);
 var indx : Integer;
 begin
-if not self.ShowHint then  exit;
+{$IF defined(ANDROID) OR defined(IOS)} exit; {$ENDIF}
 for var b in Buttons do
  begin
-  b.ShowHint:=Self.ShowHint;
+  // b.ShowHint:=Show;  // ParentShowHint is true so useful ?
   indx:=Ord(TBindNavButton(B).Index);
-  b.Hint:=FHints.FBtnHints[indx];
+  b.Hint:=FBtnHints.FButtonHints[indx];
  end;
 end;
 
@@ -207,10 +215,6 @@ begin
   ApplyColors;
 end;
 
-procedure TColoredBindNavigator.SetHints(const Value: TBtnsHints);
-begin
-  FHints.Assign(Value);
-end;
 
 procedure TColoredBindNavigator.customcolors(scrollcolor, Updatecolor,
   cancelcolor: TAlphaColor);
@@ -313,8 +317,6 @@ end;
 
 { TBtnsHints }
 
-{ TBtnsHints }
-
 constructor TBtnsHints.Create(aOwner: TColoredBindNavigator);
 begin
   FOwner:=aOwner;
@@ -328,17 +330,17 @@ end;
 
 function TBtnsHints.GetHint(const index: Integer): String;
 begin
-result:=FBtnHints[index];
+result:=FButtonHints[index];
 end;
 
 function TBtnsHints.HintisStored(const index: Integer) : Boolean;
 begin
-Result := FBtnHints[index]<>EmptyStr;
+Result := FButtonHints[index]<>EmptyStr;
 end;
 
 procedure TBtnsHints.SetHint(const index: Integer; const Value: String);
 begin
-FBtnHints[index]:=Value;
+FButtonHints[index]:=Value;
 end;
 
 
